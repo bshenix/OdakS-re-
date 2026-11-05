@@ -1,0 +1,1008 @@
+
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OdakSüreç - Verimlilik & Odaklanma Asistanı</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        #bgContainer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.5s ease-in-out;
+        }
+
+        #bgOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: background 0.3s ease;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-btn:active {
+            transform: scale(0.95);
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 999px; }
+
+        .mobile-dock {
+            box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        @keyframes pulseLogo {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.08); opacity: 1; }
+        }
+        .logo-pulse {
+            animation: pulseLogo 2s infinite ease-in-out;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-slate-950 text-white overflow-hidden relative selection:bg-brand-500">
+
+    <!-- ARKA PLAN -->
+    <div id="bgContainer" class="bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950"></div>
+    <div id="bgOverlay"></div>
+
+    <!-- AÇILIŞ EKRANI -->
+    <div id="splashScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-700">
+        <div class="flex flex-col items-center gap-4 logo-pulse">
+            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-2xl shadow-brand-500/40">
+                <i data-lucide="brain-circuit" class="w-12 h-12 text-white"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                OdakSüreç
+            </h1>
+            <p class="text-xs text-slate-400 font-medium">Geliştirici: UmutTrDeveloper</p>
+        </div>
+        <div class="absolute bottom-10 flex flex-col items-center gap-2">
+            <div class="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs text-slate-400">Yükleniyor...</span>
+        </div>
+    </div>
+
+    <!-- ANA KAPSAYICI -->
+    <div id="appContainer" class="relative z-10 h-full flex flex-col justify-between max-w-lg mx-auto md:max-w-4xl px-4 py-3 md:py-6 overflow-hidden">
+
+        <!-- HEADER -->
+        <header class="flex items-center justify-between py-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-brand-600/80 flex items-center justify-center shadow-lg border border-white/20">
+                    <i data-lucide="brain-circuit" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white leading-tight">OdakSüreç</h1>
+                    <p class="text-[10px] text-slate-300">Geliştirici: <span class="text-brand-400 font-semibold">UmutTrDeveloper</span></p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1 px-3 py-1.5 rounded-full glass-card text-amber-300 font-bold text-xs border border-amber-400/20">
+                    <i data-lucide="flame" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                    <span id="streakCount">0 Gün</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- SEKMELER -->
+        <main class="flex-1 overflow-y-auto py-2 my-2 pr-1">
+
+            <!-- 1. SAYAÇ -->
+            <section id="tab-timer" class="tab-content flex flex-col items-center justify-center min-h-full gap-5">
+                
+                <div class="flex bg-slate-950/40 p-1 rounded-2xl border border-white/10 gap-1 w-full max-w-xs">
+                    <button id="modePomo" class="mode-btn flex-1 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white transition-all shadow-md">
+                        Pomodoro
+                    </button>
+                    <button id="modeShort" class="mode-btn flex-1 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all">
+                        Kısa Mola
+                    </button>
+                    <button id="modeLong" class="mode-btn flex-1 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all">
+                        Uzun Mola
+                    </button>
+                </div>
+
+                <div class="relative w-64 h-64 md:w-72 md:h-72 my-2 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="50%" cy="50%" r="42%" class="stroke-slate-800/60" stroke-width="10" fill="transparent"></circle>
+                        <circle id="timerRing" cx="50%" cy="50%" r="42%" class="stroke-brand-500 progress-ring__circle" stroke-width="10" stroke-linecap="round" fill="transparent" stroke-dasharray="790" stroke-dashoffset="0"></circle>
+                    </svg>
+
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                        <span id="timerDisplay" class="text-5xl md:text-6xl font-extrabold font-mono text-white drop-shadow-md">
+                            25:00
+                        </span>
+                        <span id="timerLabel" class="text-xs text-slate-300 mt-2 font-semibold uppercase tracking-wider">
+                            Odaklanma Zamanı
+                        </span>
+                        <span id="activeTaskBanner" class="text-xs text-brand-300 mt-1 max-w-[200px] truncate bg-brand-950/60 px-2.5 py-1 rounded-full border border-brand-500/30">
+                            🎯 <span id="activeTaskName">Görev Seçilmedi</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button id="startBtn" class="px-8 py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-brand-500/30 flex items-center gap-2 transition-all active:scale-95 text-base">
+                        <i data-lucide="play" id="startIcon" class="w-5 h-5 fill-white"></i>
+                        <span id="startText">Başlat</span>
+                    </button>
+                    <button id="resetBtn" class="p-3.5 glass-btn rounded-2xl text-slate-200 hover:text-white" title="Sıfırla">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    </button>
+                    <button id="skipBtn" class="p-3.5 glass-btn rounded-2xl text-slate-200 hover:text-white" title="Atla">
+                        <i data-lucide="skip-forward" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. SESLER -->
+            <section id="tab-sounds" class="tab-content hidden space-y-4">
+                <div class="glass-card p-5 rounded-3xl space-y-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+                            <i data-lucide="headphones" class="w-5 h-5 text-brand-400"></i>
+                            Arka Plan Ambiyans Sesleri
+                        </h2>
+                        <p class="text-xs text-slate-300">Zihnini rahatlatmak için ses efektlerini karıştır.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Yağmur -->
+                        <div class="glass-card p-3 rounded-2xl flex flex-col items-center gap-2">
+                            <button class="sound-btn w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-300 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all shadow-md" data-sound="rain">
+                                <i data-lucide="cloud-rain" class="w-6 h-6"></i>
+                            </button>
+                            <span class="text-xs font-semibold text-slate-200">Hafif Yağmur</span>
+                            <input type="range" min="0" max="1" step="0.05" value="0.5" class="sound-vol w-full h-1.5 bg-slate-700/80 rounded-lg appearance-none cursor-pointer accent-brand-400 shadow-inner" data-sound="rain">
+                        </div>
+
+                        <!-- Deniz -->
+                        <div class="glass-card p-3 rounded-2xl flex flex-col items-center gap-2">
+                            <button class="sound-btn w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-300 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all shadow-md" data-sound="waves">
+                                <i data-lucide="waves" class="w-6 h-6"></i>
+                            </button>
+                            <span class="text-xs font-semibold text-slate-200">Deniz Dalgası</span>
+                            <input type="range" min="0" max="1" step="0.05" value="0.5" class="sound-vol w-full h-1.5 bg-slate-700/80 rounded-lg appearance-none cursor-pointer accent-brand-400 shadow-inner" data-sound="waves">
+                        </div>
+
+                        <!-- Rüzgar -->
+                        <div class="glass-card p-3 rounded-2xl flex flex-col items-center gap-2">
+                            <button class="sound-btn w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-300 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all shadow-md" data-sound="wind">
+                                <i data-lucide="wind" class="w-6 h-6"></i>
+                            </button>
+                            <span class="text-xs font-semibold text-slate-200">Sakin Rüzgar</span>
+                            <input type="range" min="0" max="1" step="0.05" value="0.5" class="sound-vol w-full h-1.5 bg-slate-700/80 rounded-lg appearance-none cursor-pointer accent-brand-400 shadow-inner" data-sound="wind">
+                        </div>
+
+                        <!-- Alfa -->
+                        <div class="glass-card p-3 rounded-2xl flex flex-col items-center gap-2">
+                            <button class="sound-btn w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-300 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all shadow-md" data-sound="binaural">
+                                <i data-lucide="zap" class="w-6 h-6"></i>
+                            </button>
+                            <span class="text-xs font-semibold text-slate-200">Alfa Frekansı</span>
+                            <input type="range" min="0" max="1" step="0.05" value="0.3" class="sound-vol w-full h-1.5 bg-slate-700/80 rounded-lg appearance-none cursor-pointer accent-brand-400 shadow-inner" data-sound="binaural">
+                        </div>
+                    </div>
+
+                    <hr class="border-white/10">
+
+                    <!-- YOUTUBE URL ALANI (BETA UYARILI) -->
+                    <div class="space-y-2 p-3 rounded-2xl bg-amber-950/20 border border-amber-500/20">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i data-lucide="video" class="w-4 h-4 text-amber-400"></i>
+                                YouTube Müzik / Ses Ekle
+                            </label>
+                            <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">BETA</span>
+                        </div>
+                        
+                        <p class="text-[10px] text-amber-200/70">
+                            ⚠️ Bu özellikte tarayıcı kısıtlamaları nedeniyle geliştirme devam etmektedir.
+                        </p>
+
+                        <div class="flex gap-2">
+                            <input type="text" id="ytUrlInput" placeholder="Örn: https://www.youtube.com/watch?v=..." 
+                                class="flex-1 bg-slate-900/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-500">
+                            <button id="playYtBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+                                Dene
+                            </button>
+                        </div>
+
+                        <div id="youtubePlayerBox" class="hidden mt-2 p-3 rounded-2xl bg-slate-900/60 border border-white/10 flex items-center justify-between">
+                            <span class="text-xs text-slate-300 truncate max-w-[180px]" id="ytTrackName">Oynatılıyor...</span>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="ytVolSlider" min="0" max="100" value="50" class="w-20 h-1.5 bg-slate-700 rounded-lg accent-amber-500 cursor-pointer">
+                                <button id="stopYtBtn" class="text-xs text-amber-400 hover:text-amber-300 font-semibold px-2 py-1 bg-amber-950/50 rounded-lg border border-amber-500/30">Durdur</button>
+                            </div>
+                        </div>
+                        <div id="hiddenYtPlayer" style="position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. GÖREVLER -->
+            <section id="tab-tasks" class="tab-content hidden space-y-4">
+                <div class="glass-card p-5 rounded-3xl flex flex-col h-[420px]">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-5 h-5 text-brand-400"></i>
+                            Bugünün Hedefleri
+                        </h2>
+                        <span id="taskStatusText" class="text-xs text-slate-300">0 / 0 Tamamlandı</span>
+                    </div>
+
+                    <form id="addTaskForm" class="flex gap-2 mb-3">
+                        <input type="text" id="taskInput" placeholder="Yeni çalışma hedefi yaz..." required
+                            class="flex-1 bg-slate-900/70 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-500">
+                        <input type="number" id="taskPomoInput" min="1" max="10" value="1" title="Tahmini Pomodoro Sayısı"
+                            class="w-12 bg-slate-900/70 border border-white/10 rounded-xl text-center text-xs text-white focus:outline-none">
+                        <button type="submit" class="px-3 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition-all">
+                            Ekle
+                        </button>
+                    </form>
+
+                    <div id="taskList" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+                </div>
+            </section>
+
+            <!-- 4. İSTATİSTİKLER -->
+            <section id="tab-stats" class="tab-content hidden space-y-4">
+                <div class="glass-card p-5 rounded-3xl space-y-4">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-brand-400"></i>
+                        Çalışma Analizi
+                    </h2>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="glass-card p-3 rounded-2xl text-center">
+                            <span class="block text-[10px] text-slate-300">Bugün Odak</span>
+                            <span id="statToday" class="text-lg font-extrabold text-brand-300">0d</span>
+                        </div>
+                        <div class="glass-card p-3 rounded-2xl text-center">
+                            <span class="block text-[10px] text-slate-300">Pomodoro</span>
+                            <span id="statPomos" class="text-lg font-extrabold text-indigo-300">0</span>
+                        </div>
+                        <div class="glass-card p-3 rounded-2xl text-center">
+                            <span class="block text-[10px] text-slate-300">Seri</span>
+                            <span id="statStreak" class="text-lg font-extrabold text-amber-300">0 Gün</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full h-40">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. AYARLAR -->
+            <section id="tab-settings" class="tab-content hidden space-y-4">
+                <div class="glass-card p-5 rounded-3xl space-y-4 max-h-[450px] overflow-y-auto">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="palette" class="w-5 h-5 text-brand-400"></i>
+                        Arka Plan & Ayarlar
+                    </h2>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-200 mb-2">📸 Telefonundan / Bilgisayarından Görsel Yükle</label>
+                        <input type="file" id="customBgInput" accept="image/*" class="block w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer">
+                    </div>
+
+                    <hr class="border-white/10">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-200 mb-2">🌄 Hazır Duvar Kağıtları</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setBgImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80')" class="h-16 rounded-xl bg-cover bg-center border border-white/25 hover:scale-105 transition-transform" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80')"></button>
+                            <button onclick="setBgImage('https://images.unsplash.com/photo-1511497584788-876761465087?auto=format&fit=crop&w=1200&q=80')" class="h-16 rounded-xl bg-cover bg-center border border-white/25 hover:scale-105 transition-transform" style="background-image: url('https://images.unsplash.com/photo-1511497584788-876761465087?auto=format&fit=crop&w=300&q=80')"></button>
+                            <button onclick="setBgImage('https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80')" class="h-16 rounded-xl bg-cover bg-center border border-white/25 hover:scale-105 transition-transform" style="background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=300&q=80')"></button>
+                        </div>
+                    </div>
+
+                    <hr class="border-white/10">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-200 mb-2">🎨 Düz Gradient Temaları</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setBgGradient('from-slate-900 via-purple-950 to-indigo-950')" class="h-10 rounded-xl bg-gradient-to-r from-slate-900 via-purple-950 to-indigo-950 border border-white/20 text-[10px]">Gece Gezegeni</button>
+                            <button onclick="setBgGradient('from-amber-950 via-stone-900 to-amber-900')" class="h-10 rounded-xl bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 border border-white/20 text-[10px]">Sıcak Kahve</button>
+                            <button onclick="setBgGradient('from-emerald-950 via-slate-900 to-teal-950')" class="h-10 rounded-xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-white/20 text-[10px]">Derin Orman</button>
+                        </div>
+                    </div>
+
+                    <hr class="border-white/10">
+
+                    <!-- SÜRE AYARLARI -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-slate-200">⏱️ Süre Ayarları (Dakika - Anında Kaydolur)</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-300">Pomodoro</label>
+                                <input type="number" id="cfgPomo" min="1" max="90" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-xs text-center text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-300">Kısa Mola</label>
+                                <input type="number" id="cfgShort" min="1" max="30" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-xs text-center text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-300">Uzun Mola</label>
+                                <input type="number" id="cfgLong" min="1" max="60" class="w-full bg-slate-900 border border-white/10 rounded-xl p-2 text-xs text-center text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-white/10">
+
+                    <!-- YEDEKLEME -->
+                    <div class="space-y-2">
+                        <h3 class="text-xs font-bold text-slate-200">💾 Veri Yedekleme</h3>
+                        <div class="flex gap-2">
+                            <button id="exportBtn" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-all">Verileri İndir (.json)</button>
+                            <label class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold text-center cursor-pointer transition-all">
+                                Veri Yükle
+                                <input type="file" id="importFile" accept=".json" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- MOBİL DOCK MENÜ -->
+        <nav class="mobile-dock glass-card rounded-2xl p-1.5 flex items-center justify-around border border-white/20">
+            <button data-tab="tab-timer" class="nav-btn flex flex-col items-center gap-1 p-2 rounded-xl text-brand-400 font-bold transition-all">
+                <i data-lucide="timer" class="w-5 h-5"></i>
+                <span class="text-[10px]">Sayaç</span>
+            </button>
+            <button data-tab="tab-sounds" class="nav-btn flex flex-col items-center gap-1 p-2 rounded-xl text-slate-300 hover:text-white transition-all">
+                <i data-lucide="music" class="w-5 h-5"></i>
+                <span class="text-[10px]">Sesler</span>
+            </button>
+            <button data-tab="tab-tasks" class="nav-btn flex flex-col items-center gap-1 p-2 rounded-xl text-slate-300 hover:text-white transition-all">
+                <i data-lucide="check-square" class="w-5 h-5"></i>
+                <span class="text-[10px]">Görevler</span>
+            </button>
+            <button data-tab="tab-stats" class="nav-btn flex flex-col items-center gap-1 p-2 rounded-xl text-slate-300 hover:text-white transition-all">
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                <span class="text-[10px]">Analiz</span>
+            </button>
+            <button data-tab="tab-settings" class="nav-btn flex flex-col items-center gap-1 p-2 rounded-xl text-slate-300 hover:text-white transition-all">
+                <i data-lucide="palette" class="w-5 h-5"></i>
+                <span class="text-[10px]">Ayarlar</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- YOUTUBE API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <!-- AUDIO CHIME -->
+    <script>
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } catch(e){}
+        }
+    </script>
+
+    <!-- UYGULAMA JAVASCRIPT -->
+    <script>
+        let ytPlayer = null;
+
+        function onYouTubeIframeAPIReady() {}
+
+        function extractYoutubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.classList.add('opacity-0');
+                setTimeout(() => splash.remove(), 700);
+            }, 1500);
+
+            let config = JSON.parse(localStorage.getItem('odak_config')) || { pomo: 25, short: 5, long: 15 };
+            let state = {
+                mode: 'pomo',
+                timeLeft: config.pomo * 60,
+                totalTime: config.pomo * 60,
+                isRunning: false,
+                interval: null,
+                activeTaskId: null,
+                streak: parseInt(localStorage.getItem('odak_streak')) || 0,
+                lastDate: localStorage.getItem('odak_date') || null,
+                completedToday: 0
+            };
+
+            let tasks = JSON.parse(localStorage.getItem('odak_tasks')) || [];
+            let weeklyStats = JSON.parse(localStorage.getItem('odak_weekly')) || [0, 0, 0, 0, 0, 0, 0];
+
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerRing = document.getElementById('timerRing');
+            const startBtn = document.getElementById('startBtn');
+            const startText = document.getElementById('startText');
+            const startIcon = document.getElementById('startIcon');
+            const resetBtn = document.getElementById('resetBtn');
+            const skipBtn = document.getElementById('skipBtn');
+
+            const cfgPomoInput = document.getElementById('cfgPomo');
+            const cfgShortInput = document.getElementById('cfgShort');
+            const cfgLongInput = document.getElementById('cfgLong');
+
+            cfgPomoInput.value = config.pomo;
+            cfgShortInput.value = config.short;
+            cfgLongInput.value = config.long;
+
+            function handleTimeChange() {
+                config.pomo = parseInt(cfgPomoInput.value) || 25;
+                config.short = parseInt(cfgShortInput.value) || 5;
+                config.long = parseInt(cfgLongInput.value) || 15;
+                localStorage.setItem('odak_config', JSON.stringify(config));
+                if (!state.isRunning) setMode(state.mode);
+            }
+
+            cfgPomoInput.addEventListener('input', handleTimeChange);
+            cfgShortInput.addEventListener('input', handleTimeChange);
+            cfgLongInput.addEventListener('input', handleTimeChange);
+
+            // YOUTUBE MANTIĞI
+            const ytUrlInput = document.getElementById('ytUrlInput');
+            const playYtBtn = document.getElementById('playYtBtn');
+            const youtubePlayerBox = document.getElementById('youtubePlayerBox');
+            const stopYtBtn = document.getElementById('stopYtBtn');
+            const ytVolSlider = document.getElementById('ytVolSlider');
+
+            playYtBtn.addEventListener('click', () => {
+                const url = ytUrlInput.value.trim();
+                const videoId = extractYoutubeId(url);
+                if (!videoId) {
+                    alert('Lütfen geçerli bir YouTube URL yapıştırın!');
+                    return;
+                }
+
+                youtubePlayerBox.classList.remove('hidden');
+
+                if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                    ytPlayer.loadVideoById(videoId);
+                } else {
+                    ytPlayer = new YT.Player('hiddenYtPlayer', {
+                        height: '0',
+                        width: '0',
+                        videoId: videoId,
+                        playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': videoId },
+                        events: {
+                            'onReady': (event) => {
+                                event.target.setVolume(parseInt(ytVolSlider.value));
+                                event.target.playVideo();
+                            }
+                        }
+                    });
+                }
+            });
+
+            stopYtBtn.addEventListener('click', () => {
+                if (ytPlayer && typeof ytPlayer.stopVideo === 'function') {
+                    ytPlayer.stopVideo();
+                }
+                youtubePlayerBox.classList.add('hidden');
+                ytUrlInput.value = '';
+            });
+
+            ytVolSlider.addEventListener('input', (e) => {
+                if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+                    ytPlayer.setVolume(parseInt(e.target.value));
+                }
+            });
+
+            // TAB GEZİNME
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.getAttribute('data-tab');
+                    navBtns.forEach(b => {
+                        b.classList.remove('text-brand-400', 'font-bold');
+                        b.classList.add('text-slate-300');
+                    });
+                    btn.classList.add('text-brand-400', 'font-bold');
+                    tabContents.forEach(tc => tc.classList.add('hidden'));
+                    document.getElementById(targetTab).classList.remove('hidden');
+                });
+            });
+
+            // SAYAÇ MANTIĞI
+            function updateTimerDisplay() {
+                const mins = Math.floor(state.timeLeft / 60);
+                const secs = state.timeLeft % 60;
+                const fmt = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                timerDisplay.textContent = fmt;
+
+                const progress = state.timeLeft / state.totalTime;
+                const offset = 790 - (progress * 790);
+                timerRing.style.strokeDashoffset = offset;
+            }
+
+            function setMode(mode) {
+                state.mode = mode;
+                state.isRunning = false;
+                clearInterval(state.interval);
+
+                document.querySelectorAll('.mode-btn').forEach(b => {
+                    b.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                    b.classList.add('text-slate-300');
+                });
+
+                if (mode === 'pomo') {
+                    document.getElementById('modePomo').classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                    state.totalTime = config.pomo * 60;
+                    document.getElementById('timerLabel').textContent = 'Odaklanma Zamanı';
+                } else if (mode === 'short') {
+                    document.getElementById('modeShort').classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                    state.totalTime = config.short * 60;
+                    document.getElementById('timerLabel').textContent = 'Kısa Mola';
+                } else if (mode === 'long') {
+                    document.getElementById('modeLong').classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                    state.totalTime = config.long * 60;
+                    document.getElementById('timerLabel').textContent = 'Uzun Mola';
+                }
+
+                state.timeLeft = state.totalTime;
+                updateStartUI();
+                updateTimerDisplay();
+            }
+
+            function updateStartUI() {
+                if (state.isRunning) {
+                    startText.textContent = 'Duraklat';
+                    startIcon.setAttribute('data-lucide', 'pause');
+                } else {
+                    startText.textContent = 'Başlat';
+                    startIcon.setAttribute('data-lucide', 'play');
+                }
+                lucide.createIcons();
+            }
+
+            function toggleTimer() {
+                if (state.isRunning) {
+                    state.isRunning = false;
+                    clearInterval(state.interval);
+                } else {
+                    state.isRunning = true;
+                    state.interval = setInterval(() => {
+                        if (state.timeLeft > 0) {
+                            state.timeLeft--;
+                            updateTimerDisplay();
+                        } else {
+                            onTimerFinish();
+                        }
+                    }, 1000);
+                }
+                updateStartUI();
+            }
+
+            function onTimerFinish() {
+                toggleTimer();
+                playChime();
+
+                if (state.mode === 'pomo') {
+                    checkStreakIncrement();
+                    state.completedToday++;
+                    document.getElementById('statPomos').textContent = state.completedToday;
+
+                    if (state.activeTaskId) {
+                        tasks = tasks.map(t => {
+                            if (t.id === state.activeTaskId) {
+                                const newPomos = t.completedPomos + 1;
+                                return { ...t, completedPomos: newPomos, done: newPomos >= t.estPomos ? true : t.done };
+                            }
+                            return t;
+                        });
+                        renderTasks();
+                    }
+
+                    const dayIdx = (new Date().getDay() + 6) % 7;
+                    weeklyStats[dayIdx] += config.pomo;
+                    localStorage.setItem('odak_weekly', JSON.stringify(weeklyStats));
+                    updateStats();
+
+                    setMode('short');
+                } else {
+                    setMode('pomo');
+                }
+            }
+
+            startBtn.addEventListener('click', toggleTimer);
+            resetBtn.addEventListener('click', () => {
+                if (state.isRunning) toggleTimer();
+                state.timeLeft = state.totalTime;
+                updateTimerDisplay();
+            });
+            skipBtn.addEventListener('click', onTimerFinish);
+
+            document.getElementById('modePomo').addEventListener('click', () => setMode('pomo'));
+            document.getElementById('modeShort').addEventListener('click', () => setMode('short'));
+            document.getElementById('modeLong').addEventListener('click', () => setMode('long'));
+
+            // ARKA PLAN
+            const bgContainer = document.getElementById('bgContainer');
+            const customBgInput = document.getElementById('customBgInput');
+
+            window.setBgImage = function(url) {
+                bgContainer.style.backgroundImage = `url('${url}')`;
+            };
+
+            window.setBgGradient = function(gradientClass) {
+                bgContainer.style.backgroundImage = 'none';
+                bgContainer.className = `fixed inset-0 z-0 bg-gradient-to-br ${gradientClass}`;
+            };
+
+            customBgInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        setBgImage(evt.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // GÖREVLER
+            const addTaskForm = document.getElementById('addTaskForm');
+            const taskInput = document.getElementById('taskInput');
+            const taskPomoInput = document.getElementById('taskPomoInput');
+            const taskList = document.getElementById('taskList');
+
+            addTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = taskInput.value.trim();
+                const estPomos = parseInt(taskPomoInput.value) || 1;
+                if (!title) return;
+
+                tasks.unshift({ id: Date.now(), title, estPomos, completedPomos: 0, done: false });
+                taskInput.value = '';
+                renderTasks();
+            });
+
+            function renderTasks() {
+                localStorage.setItem('odak_tasks', JSON.stringify(tasks));
+                const doneCount = tasks.filter(t => t.done).length;
+                document.getElementById('taskStatusText').textContent = `${doneCount} / ${tasks.length} Tamamlandı`;
+
+                taskList.innerHTML = '';
+                if (tasks.length === 0) {
+                    taskList.innerHTML = `<p class="text-center text-slate-400 text-xs py-8">Henüz görev eklenmedi.</p>`;
+                    return;
+                }
+
+                tasks.forEach(t => {
+                    const el = document.createElement('div');
+                    el.className = `glass-card p-2.5 rounded-2xl flex items-center justify-between gap-2 border border-white/10 ${state.activeTaskId === t.id ? 'border-brand-400 bg-brand-950/40' : ''}`;
+                    el.innerHTML = `
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <button onclick="toggleTask(${t.id})" class="w-4 h-4 rounded-md border border-slate-400 flex items-center justify-center ${t.done ? 'bg-brand-600 border-brand-500' : ''}">
+                                ${t.done ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                            </button>
+                            <span class="text-xs text-slate-200 truncate ${t.done ? 'line-through text-slate-400' : ''}">${escapeHtml(t.title)}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-300 font-mono">🍅 ${t.completedPomos}/${t.estPomos}</span>
+                            <button onclick="setActiveTask(${t.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${state.activeTaskId === t.id ? 'bg-brand-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-brand-600 hover:text-white'}" title="Bu Göreve Odaklan">Odaklan</button>
+                            <button onclick="deleteTask(${t.id})" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    `;
+                    taskList.appendChild(el);
+                });
+                lucide.createIcons();
+            }
+
+            window.toggleTask = function(id) {
+                tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+                renderTasks();
+            };
+
+            window.deleteTask = function(id) {
+                tasks = tasks.filter(t => t.id !== id);
+                if (state.activeTaskId === id) {
+                    state.activeTaskId = null;
+                    document.getElementById('activeTaskName').textContent = 'Görev Seçilmedi';
+                }
+                renderTasks();
+            };
+
+            window.setActiveTask = function(id) {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    state.activeTaskId = id;
+                    document.getElementById('activeTaskName').textContent = task.title;
+                    renderTasks();
+                    document.querySelector('[data-tab="tab-timer"]').click();
+                }
+            };
+
+            function escapeHtml(str) {
+                const d = document.createElement('div');
+                d.textContent = str;
+                return d.innerHTML;
+            }
+
+            // AMBİYANS SESLERİ (ÇALIŞAN YEREL KODLAR)
+            let audioCtx = null;
+            const sounds = {};
+
+            function initAudio() {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            function createPinkNoise() {
+                const bSize = audioCtx.sampleRate * 2;
+                const buffer = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+                for (let i = 0; i < bSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+                    b6 = white * 0.115926;
+                }
+                const src = audioCtx.createBufferSource();
+                src.buffer = buffer;
+                src.loop = true;
+                return src;
+            }
+
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    initAudio();
+                    const sound = btn.getAttribute('data-sound');
+                    const volInput = document.querySelector(`.sound-vol[data-sound="${sound}"]`);
+                    const vol = volInput ? parseFloat(volInput.value) : 0.5;
+
+                    if (sounds[sound]) {
+                        sounds[sound].gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                        setTimeout(() => {
+                            if (sounds[sound]) {
+                                sounds[sound].src.stop();
+                                delete sounds[sound];
+                            }
+                        }, 200);
+                        btn.classList.remove('bg-brand-600', 'text-white');
+                        btn.classList.add('bg-slate-800/80', 'text-slate-300');
+                    } else {
+                        const gain = audioCtx.createGain();
+                        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                        gain.connect(audioCtx.destination);
+
+                        let src = createPinkNoise();
+                        const filter = audioCtx.createBiquadFilter();
+
+                        if (sound === 'rain') {
+                            filter.type = 'lowpass';
+                            filter.frequency.value = 800;
+                        } else if (sound === 'waves') {
+                            filter.type = 'lowpass';
+                            filter.frequency.value = 400;
+                        } else if (sound === 'wind') {
+                            filter.type = 'bandpass';
+                            filter.frequency.value = 500;
+                        } else if (sound === 'binaural') {
+                            src = audioCtx.createOscillator();
+                            src.frequency.value = 210;
+                        }
+
+                        src.connect(filter);
+                        filter.connect(gain);
+                        src.start();
+
+                        sounds[sound] = { src, gain };
+                        btn.classList.add('bg-brand-600', 'text-white');
+                        btn.classList.remove('bg-slate-800/80', 'text-slate-300');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.sound-vol').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const sound = e.target.getAttribute('data-sound');
+                    const val = parseFloat(e.target.value);
+                    if (sounds[sound] && sounds[sound].gain) {
+                        sounds[sound].gain.gain.setValueAtTime(val, audioCtx.currentTime);
+                    }
+                });
+            });
+
+            // SERİ & İSTATİSTİK
+            function checkStreakIncrement() {
+                const today = new Date().toDateString();
+                if (state.lastDate !== today) {
+                    state.streak++;
+                    state.lastDate = today;
+                    localStorage.setItem('odak_streak', state.streak);
+                    localStorage.setItem('odak_date', today);
+                    updateStreakUI();
+                }
+            }
+
+            function updateStreakUI() {
+                document.getElementById('streakCount').textContent = `${state.streak} Gün`;
+                document.getElementById('statStreak').textContent = `${state.streak} Gün`;
+            }
+
+            function updateStats() {
+                const dayIdx = (new Date().getDay() + 6) % 7;
+                const mins = weeklyStats[dayIdx] || 0;
+                document.getElementById('statToday').textContent = `${mins}dk`;
+                if (chartInstance) {
+                    chartInstance.data.datasets[0].data = weeklyStats;
+                    chartInstance.update();
+                }
+            }
+
+            let chartInstance = null;
+            function initChart() {
+                const ctx = document.getElementById('statsChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                        datasets: [{
+                            data: weeklyStats,
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                            borderColor: '#6366f1',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        }
+                    }
+                });
+            }
+
+            // YEDEKLEME
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const backupData = { config, tasks, weeklyStats, streak: state.streak };
+                const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `odak-surec-yedek-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('importFile').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        if (data.config) {
+                            config = data.config;
+                            localStorage.setItem('odak_config', JSON.stringify(config));
+                            cfgPomoInput.value = config.pomo;
+                            cfgShortInput.value = config.short;
+                            cfgLongInput.value = config.long;
+                        }
+                        if (data.tasks) { tasks = data.tasks; renderTasks(); }
+                        if (data.weeklyStats) {
+                            weeklyStats = data.weeklyStats;
+                            localStorage.setItem('odak_weekly', JSON.stringify(weeklyStats));
+                            updateStats();
+                        }
+                        if (data.streak) {
+                            state.streak = data.streak;
+                            localStorage.setItem('odak_streak', state.streak);
+                            updateStreakUI();
+                        }
+                        setMode('pomo');
+                        alert('Veriler başarıyla yüklendi!');
+                    } catch(err) {
+                        alert('Geçersiz yedek dosyası!');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // İLK ÇALIŞTIRMA
+            updateStreakUI();
+            setMode('pomo');
+            renderTasks();
+            initChart();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
