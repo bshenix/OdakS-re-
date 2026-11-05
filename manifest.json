@@ -1,10 +1,15 @@
 {
-  "name": "OdakSüreç",
-  "short_name": "OdakSüreç",
-  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "dir": "ltr",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "name": "bshenix.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "bshenix.github",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "Pomodoro Odak ve Verimlilik Uygulaması",
+  "id": "com.umuttrdeveloper.odaksurec"
   "icons": [
     {
       "src": "./launchericon-192x192.png",
